@@ -23,17 +23,18 @@ Aligned with Project Chimera SRS §3.1:
 
 ```mermaid
 graph TD
-    A[Human Orchestrator<br/>Goals + Dashboard] --> B[Planner]
-    B --> C[Task Queue<br/>(Redis)]
-    C --> D[Worker Pool<br/>(Parallel, Stateless)]
-    D --> E[Review Queue<br/>(Redis)]
-    E --> F[Judge<br/>(Confidence + CFO Sub-agent)]
-    F -->|Approve| G[Commit State<br/>(PostgreSQL + Weaviate)]
+    A[Human Orchestrator<br>Goals + Dashboard] --> B[Planner]
+    B --> C[Task Queue<br>(Redis)]
+    C --> D[Worker Pool<br>(Parallel, Stateless)]
+    D --> E[Review Queue<br>(Redis)]
+    E --> F[Judge<br>(Confidence + CFO Sub-agent)]
+    F -->|Approve| G[Commit State<br>(PostgreSQL + Weaviate)]
     F -->|Reject/Retry| B
     F -->|Escalate| H[HITL Review Dashboard]
-    D --> I[MCP Servers<br/>(Social, Generation, Coinbase, Trends)]
-    B --> J[MCP Resources<br/>(Perception Layer)]
-```
+    D --> I[MCP Servers<br>(Social, Generation, Coinbase, Trends)]
+    B --> J[MCP Resources<br>(Perception Layer)]
+    G --> K[Published Content<br>Social Platforms via MCP]
+    G --> L[On-Chain Transactions<br>Coinbase AgentKit]
 
 project-chimera-factory/
 ├── .github/workflows/ # CI/CD pipeline
@@ -68,3 +69,4 @@ pytest tests/ -v
 # Or in Docker
 
 make test
+```
