@@ -1,39 +1,41 @@
 # syntax=docker/dockerfile:1
+
+# ─── Builder Stage ───────────────────────────────────────────────────────────────
 FROM python:3.14-slim-bookworm AS builder
 
-# Install uv (fast dependency manager)
-RUN pip install --no-cache-dir uv==0.4.*  # use latest stable in Feb 2026
+# Install uv
+RUN pip install --no-cache-dir uv==0.4.*
 
 WORKDIR /app
 
-# Copy only the dependency files first → better layer caching
+# Copy dependency files first for caching
 COPY pyproject.toml uv.lock* ./
 
-# Install production dependencies only (no dev)
-RUN uv sync --frozen --no-install-project --no-dev
+# Install ALL dependencies (including dev for pytest)
+RUN uv sync --frozen
 
-# Copy the rest of the application
+# Copy the rest of the project
 COPY . .
 
-# Final image – smaller & secure
-FROM python:3.12-slim-bookworm
+# ─── Final Stage ─────────────────────────────────────────────────────────────────
+FROM python:3.14-slim-bookworm
 
 WORKDIR /app
 
-# Copy uv-installed packages from builder
+# Copy the full .venv with pytest from builder
 COPY --from=builder /app/.venv /app/.venv
 
 # Copy source code
 COPY . .
 
-# Make sure PATH includes .venv/bin
+# Ensure .venv/bin is in PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Default command – can be overridden
+# Default command (can be overridden by docker run)
 CMD ["bash"]
 
-# Labels for traceability
+# Labels
 LABEL org.opencontainers.image.title="chimera-factory"
-LABEL org.opencontainers.image.description="Project Chimera Factory – Autonomous Influencer Agentic Infrastructure"
+LABEL org.opencontainers.image.description="Project Chimera Factory"
 LABEL org.opencontainers.image.version="0.1.0"
 LABEL org.opencontainers.image.created="2026-02-05"
