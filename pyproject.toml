@@ -8,6 +8,7 @@ dependencies = [
     "pytest>=8.0",
     "redis>=5.0",
     "weaviate-client>=4.0",
+    "tweepy>=4.0",
 ]
 
 [tool.uv]
