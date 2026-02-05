@@ -55,10 +55,16 @@ Python 3.12+ (managed via uv)
 uv
 Docker (optional, for containerized testing)
 
+Installation
+
 # Install dependencies (creates virtual env)
 
 uv sync
 
-# Or if Makefile is available
+# Run Tests
 
-make setup # equivalent to uv sync
+pytest tests/ -v
+
+# Or in Docker
+
+make test
