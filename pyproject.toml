@@ -1,5 +1,16 @@
-
 [project]
-name = "project-chimera-factory"
+name = "chimera-factory"
 version = "0.1.0"
+description = "Autonomous Influencer Agentic Infrastructure"
 requires-python = ">=3.14"
+dependencies = [
+    "pydantic>=2.0",
+    "pytest>=8.0",
+    "redis>=5.0",
+    "weaviate-client>=4.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest-cov",
+]
