@@ -36,6 +36,8 @@ graph TD
     G --> K[Published Content<br>Social Platforms via MCP]
     G --> L[On-Chain Transactions<br>Coinbase AgentKit]
 
+```
+
 project-chimera-factory/
 ├── .github/workflows/ # CI/CD pipeline
 ├── .cursor/ # IDE agent rules (context for AI assistants)
@@ -69,4 +71,3 @@ pytest tests/ -v
 # Or in Docker
 
 make test
-```
