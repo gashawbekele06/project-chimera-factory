@@ -1,28 +1,52 @@
-import os
+import pytest
+from pydantic import BaseModel, ValidationError
+
+# Expected output schema (from specs/skills/fetch_trends/README.md)
 
 
-def test_fetch_twitter_trends_v1_monkeypatched(monkeypatch):
-    # Provide fake credentials
-    monkeypatch.setenv("TWITTER_API_KEY", "key")
-    monkeypatch.setenv("TWITTER_API_SECRET", "secret")
-    monkeypatch.setenv("TWITTER_ACCESS_TOKEN", "token")
-    monkeypatch.setenv("TWITTER_ACCESS_TOKEN_SECRET", "tokensecret")
+class TrendItem(BaseModel):
+    name: str
+    volume: int
+    category: str | None = None
 
-    # Create a dummy API object
-    class DummyAPI:
-        def get_place_trends(self, id):
-            return [{"trends": [{"name": "#one"}, {"name": "#two"}]}]
 
-    # Monkeypatch tweepy classes used in the module
-    import types
+class FetchTrendsOutput(BaseModel):
+    trends: list[TrendItem]
+    fetched_at: str
+    source_platforms: list[str] | None = None
 
-    dummy_tweepy = types.SimpleNamespace()
-    dummy_tweepy.OAuth1UserHandler = lambda a, b, c, d: None
-    dummy_tweepy.API = lambda auth: DummyAPI()
+# This test will PASS on mock validation but FAIL on real call (good)
 
-    monkeypatch.setitem(__import__("sys").modules, "tweepy", dummy_tweepy)
 
-    from skills.fetch_trends import fetch_twitter_trends
+def test_fetch_trends_output_schema_validation():
+    mock_output = {
+        "trends": [
+            {"name": "#EthiopiaFashion", "volume": 45000, "category": "fashion"},
+            {"name": "#AddisStyle", "volume": 32000}
+        ],
+        "fetched_at": "2026-02-05T10:00:00Z",
+        "source_platforms": ["twitter"]
+    }
 
-    trends = fetch_twitter_trends(woeid=1)
-    assert trends == ["#one", "#two"]
+    # Validate mock → should pass (this is just schema check)
+    validated = FetchTrendsOutput(**mock_output)
+    assert len(validated.trends) == 2
+    assert validated.fetched_at is not None
+
+# This test MUST fail until fetch_trends is implemented
+
+
+def test_fetch_trends_function_exists_and_returns_valid_data():
+    input_data = {
+        "platforms": ["twitter"],
+        "region": "ET",
+        "limit": 10
+    }
+
+    # The real call — this line will raise NameError if function missing
+    result = fetch_trends(input_data)  # ← This MUST raise NameError now
+
+    # If it somehow reaches here (impossible now), validate
+    validated = FetchTrendsOutput(**result)
+    assert isinstance(validated.trends, list)
+    assert len(validated.trends) > 0
