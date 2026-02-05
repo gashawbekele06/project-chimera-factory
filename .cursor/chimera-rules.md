@@ -13,10 +13,9 @@ The codebase is engineered for eventual swarm/agent implementation with minimal 
 
 Before suggesting or writing any code:
 
-1. ALWAYS start your response with: "Referring to specs/..." and quote the relevant section/user story/contract.
-2. If no spec is referenced in my query → respond ONLY with:  
-   "To proceed, please reference a specific file/section from specs/ (e.g., specs/functional.md user story #1 or specs/technical.md Task Schema). What spec should I use?"
-3. Only after I explicitly say "OK, use specs/..." or provide the reference → then describe plan → then (if asked) write code.
+1. ALWAYS reference at least one specific file/section from the `specs/` directory (e.g., "Based on specs/technical.md Task Schema" or "Referring to specs/functional.md user story #3").
+2. If no relevant spec is provided or the request is ambiguous → immediately ask for clarification and point to the appropriate spec file(s).
+3. Do not assume implementation details not yet specified in specs/.
 
 ## Traceability & Workflow Rules
 
