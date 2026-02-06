@@ -1,41 +1,23 @@
-# syntax=docker/dockerfile:1
+# Dockerfile
 
-# ─── Builder Stage ───────────────────────────────────────────────────────────────
-FROM python:3.14-slim-bookworm AS builder
-
-# Install uv
-RUN pip install --no-cache-dir uv==0.4.*
+FROM python:3.14-slim
 
 WORKDIR /app
 
-# Copy dependency files first for caching
-COPY pyproject.toml uv.lock* ./
+# Install uv
+RUN pip install --no-cache-dir uv
 
-# Install ALL dependencies (including dev for pytest)
+# Copy lockfile and pyproject.toml
+COPY uv.lock pyproject.toml .
+
+# Install dependencies into .venv
 RUN uv sync --frozen
+
+# Activate virtual environment by adding .venv/bin to PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy the rest of the project
 COPY . .
 
-# ─── Final Stage ─────────────────────────────────────────────────────────────────
-FROM python:3.14-slim-bookworm
-
-WORKDIR /app
-
-# Copy the full .venv with pytest from builder
-COPY --from=builder /app/.venv /app/.venv
-
-# Copy source code
-COPY . .
-
-# Ensure .venv/bin is in PATH
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Default command (can be overridden by docker run)
-CMD ["bash"]
-
-# Labels
-LABEL org.opencontainers.image.title="chimera-factory"
-LABEL org.opencontainers.image.description="Project Chimera Factory"
-LABEL org.opencontainers.image.version="0.1.0"
-LABEL org.opencontainers.image.created="2026-02-05"
+# Default command: run failing tests
+CMD ["pytest", "tests/", "-v"]
