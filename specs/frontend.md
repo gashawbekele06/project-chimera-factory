@@ -1,174 +1,69 @@
-# Frontend Specification – Human Orchestrator & HITL Dashboard
+# Frontend Specification
 
 **Version:** 1.0  
-**Date:** February 06, 2026  
-**Author:** Gashaw Bekele (FDE Trainee)
+**Date:** February 06, 2026
 
-This specification defines the complete user-facing layer for Project Chimera. It includes:
+This spec defines concrete screens, user flows, component structure, and backend API mappings. An AI agent can implement the UI (React/TS) without guesswork.
 
-- Inventory of all screens/dashboards/views
-- User interaction flows (happy path, edge cases, failure modes)
-- Component hierarchy & structure
-- Accessibility standards (WCAG 2.1 AA)
-- Exact mapping of each view to backend API contracts (from specs/technical.md) and returned data schemas
+## 1. Tech Stack & Principles
 
-Goal: An AI coder agent can implement the entire frontend (React/Vue/Svelte + Tailwind or similar) without ambiguity or guesswork.
+- Framework: React 18 + TS + Tailwind + shadcn/ui
+- State: Zustand
+- Routing: React Router v6
+- Auth: JWT cookie
+- Theme: Dark default, light toggle
+- Accessibility: WCAG 2.1 AA (ARIA, keyboard nav)
 
-## 1. Overall Design Principles
+## 2. Screens & User Flows
 
-- Framework: React 18 + TypeScript + Tailwind CSS + shadcn/ui components (or equivalent)
-- State management: Zustand or Jotai (lightweight, no Redux boilerplate)
-- Routing: React Router v6 (or TanStack Router)
-- Authentication: JWT Bearer token stored in HttpOnly cookie (backend issues via /auth/login endpoint)
-- Theme: Dark mode default (modern AI-agent aesthetic), light mode toggle
-- Accessibility: WCAG 2.1 AA – semantic HTML, ARIA labels, keyboard navigation, sufficient color contrast
-- Responsiveness: Mobile-first, breakpoints at 640px, 768px, 1024px, 1280px
-- Internationalization: react-i18next (English default, Amharic planned)
+### Login Screen (/login)
 
-## 2. Screen Inventory & User Flows
+- Flow: Enter email/password → POST /auth/login → redirect /dashboard. Edge: Invalid creds → toast error. Failure: Network → retry button.
+- Components: EmailInput, PasswordInput, SubmitButton, ForgotLink
+- API: POST /auth/login {email, password} → {token}
 
-### 2.1 Login Screen (/login)
+### Dashboard (/dashboard)
 
-**Purpose**: Authenticate human orchestrator (admin / reviewer role).
+- Flow: Load summary cards + recent content. Edge: No data → placeholders. Failure: API error → cached data + banner.
+- Components: NavBar, KPICardGrid (activeAgents, campaigns, reviews, engagement), RecentTable
+- API: GET /dashboard/summary → {activeAgents, etc.}  
+  GET /content/recent?limit=5 → array of {id, caption, mediaUrl}
 
-**User Flow**:
+### Review Queue (/review-queue)
 
-- Happy path: Enter email/password → backend /auth/login → JWT set in cookie → redirect to /dashboard
-- Edge case: Invalid credentials → show error toast "Invalid email or password"
-- Failure mode: Network error → show "Unable to connect. Please try again."
+- Flow: Load paginated list → click item → modal preview + approve/reject. Edge: Empty → message. Failure: Load error → retry.
+- Components: FilterBar, PaginatedTable, DetailModal (MediaPreview, ConfidenceBadge, Form)
+- API: GET /review-queue?status=pending&page=1 → array of {id, contentType, confidence, mediaUrl}  
+  POST /review/{id}/approve → {approved: true}
 
-**Components**:
+### Agents List (/agents)
 
-- Email input (type=email, required, auto-focus)
-- Password input (type=password, required)
-- Submit button ("Sign In")
-- "Forgot password?" link (→ /forgot-password placeholder)
-- "Create account" link (→ /register placeholder)
+- Flow: Load table → click → detail panel. Edge: No agents → create button. Failure: Error → cached list.
+- Components: AgentTable, DetailPanel (StatusCard, TasksList, WalletBalance)
+- API: GET /agents → array of {id, status, niche}  
+  GET /agents/{id} → detailed object
 
-**Backend Mapping**:
+### Campaigns (/campaigns)
 
-- POST /auth/login → { email, password }
-- Response: 200 { token: string } → set HttpOnly cookie
-- 401 → { error: "Invalid credentials" }
+- Flow: Create form → POST /campaigns → list view. Edge: Budget exceed → warning. Failure: Creation error → validation.
+- Components: CampaignList, CreateForm, DetailView (ProgressBar, AssignedAgents)
+- API: POST /campaigns {name, goal, budget} → {id}  
+  GET /campaigns → array of {id, name, status}
 
-### 2.2 Dashboard Overview (/dashboard)
-
-**Purpose**: High-level fleet status, quick actions, KPI overview.
-
-**User Flow**:
-
-- Happy path: Load → show summary cards (active agents, running campaigns, recent content, pending reviews)
-- Edge case: No active agents → show "No agents online" placeholder with "Create New Agent" button
-- Failure mode: API down → show cached data + error banner "Data may be outdated"
-
-**Components**:
-
-- Top nav bar (logo, agent count, notification bell, user avatar dropdown: profile, logout)
-- KPI cards (4-column grid):
-  - Active Agents (count, trend arrow)
-  - Running Campaigns (count)
-  - Pending Reviews (count + urgency badge)
-  - Total Engagement (last 24h views/likes)
-- Recent Content table (5 latest posts: thumbnail, caption snippet, platform icon, metrics, status badge)
-- Quick Actions: "New Campaign", "Review Queue", "Agent List"
-
-**Backend Mapping**:
-
-- GET /dashboard/summary → { activeAgents: number, runningCampaigns: number, pendingReviews: number, engagement24h: { views: number, likes: number } }
-- GET /content/recent?limit=5 → array of { id, thumbnailUrl, caption, platform, views, likes, status }
-
-### 2.3 Review Queue (/review-queue)
-
-**Purpose**: Human-in-the-loop approval/rejection of escalated content.
-
-**User Flow**:
-
-- Happy path: Load → paginated list of pending reviews → click item → show full preview (video/image/text) + approve/reject/edit form
-- Edge case: Empty queue → "No pending reviews – all agents are confident" message
-- Failure mode: Load error → retry button + offline fallback message
-
-**Components**:
-
-- Filter bar (by agent, urgency, time)
-- Paginated table (columns: Agent, Content Type, Confidence Score, Created At, Actions)
-- Detail modal/view:
-  - Media preview (video player or image)
-  - Generated caption/text
-  - Confidence score badge (green/yellow/red)
-  - Approve/Reject buttons (Approve auto-publishes, Reject → return to planner)
-  - Edit form (override caption/media)
-
-**Backend Mapping**:
-
-- GET /review-queue?status=pending&limit=20&page=1 → array of { id, agentId, contentType, confidenceScore, createdAt, mediaUrl, caption }
-- POST /review/{id}/approve → { approved: true }
-- POST /review/{id}/reject → { rejected: true, reason: string }
-- POST /review/{id}/edit → updated content
-
-### 2.4 Agent List & Management (/agents)
-
-**Purpose**: View, monitor, and manage all running agents.
-
-**User Flow**:
-
-- Happy path: Load → table of agents → click → detail view with status, current campaign, recent activity, wallet balance
-- Edge case: No agents → "Create your first agent" wizard button
-- Failure mode: API error → cached list + refresh button
-
-**Components**:
-
-- Table: Agent ID, Status (online/offline/busy), Niche/Persona, Current Campaign, Confidence Avg, Actions (pause, restart, delete)
-- Detail panel: Live status card, Recent tasks list, Wallet balance (USDC), Memory usage
-
-**Backend Mapping**:
-
-- GET /agents → array of { id, status, niche, campaignId, avgConfidence, walletBalanceUsdc }
-- GET /agents/{id} → detailed object
-
-### 2.5 Campaign Management (/campaigns)
-
-**Purpose**: Create, monitor, and pause high-level campaigns.
-
-**User Flow**:
-
-- Happy path: Create new → form (name, goal description, budget USDC, target platforms) → backend creates campaign → agents assigned
-- Edge case: Budget exceeded → warning banner + pause option
-- Failure mode: Creation error → form validation messages
-
-**Components**:
-
-- List view: Active/Paused/Completed campaigns
-- Create form: Name, Goal (textarea), Budget (number), Platforms (multi-select)
-- Detail view: Progress bar, Assigned agents, Total spend, Engagement metrics
-
-**Backend Mapping**:
-
-- POST /campaigns → { name, goalDescription, budgetUsdc, platforms }
-- GET /campaigns → array of { id, name, status, budgetUsdc, spentUsdc, progress }
-
-### 2.6 Component Hierarchy (High-Level)
+## 3. Component Structure
 
 - App
-  - Layout (NavBar, Sidebar, MainContent)
-    - NavBar (Logo, Agent Count, Notifications, User Menu)
-    - Sidebar (Dashboard, Review Queue, Agents, Campaigns, Settings)
-    - MainContent (Outlet for routes)
-  - Screens (Login, Dashboard, ReviewQueue, Agents, Campaigns)
+  - Layout (NavBar, Sidebar, Main)
+    - NavBar (Logo, Counts, Notifications, UserMenu)
+    - Sidebar (Dashboard, ReviewQueue, Agents, Campaigns)
+    - Main (Outlet for routes)
+- Shared: KPICard, DataTable, MediaPreview, ConfidenceBadge, Toast
 
-**Shared Components**:
+## 4. Accessibility & Standards
 
-- KPI Card
-- Data Table (sortable, paginated)
-- Media Preview (video player + thumbnail fallback)
-- Confidence Badge (green/yellow/red)
-- Toast Notifications (shadcn/ui)
+- Semantic HTML, ARIA labels on all interactive elements
+- Keyboard nav (focus traps in modals)
+- Color contrast 4.5:1 minimum
+- Screen reader tested (VoiceOver/NVDA)
 
-**API Contract Mapping Summary**:
-
-- All screens use typed API responses from specs/technical.md (Task/Result schemas)
-- Frontend validates inputs against same JSON schemas (zod or yup)
-- Error handling: 401 → redirect to login, 500 → error page with retry
-
-This specification is complete enough for an AI agent to implement the full frontend (React + TypeScript) without ambiguity.
-
-**Next steps**: Generate wireframes (optional: Figma link or ASCII art), implement component library, connect to backend APIs.
+This spec is complete for an AI agent to build the UI.
