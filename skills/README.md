@@ -1,20 +1,24 @@
-# Runtime Agent Skills
+# skills/README.md
 
-Skills are specific capability packages that Chimera Worker agents invoke via MCP Tools.
+## Runtime Skills for Chimera Agents
 
-Each skill lives in its own sub-folder with a README.md defining:
+These are reusable, typed capability packages that Worker agents call during task execution.  
+Each skill has a **strict Input/Output contract** to prevent hallucinations and ensure testability.
 
-- Description
-- Input schema (JSON)
-- Output schema (JSON)
-- MCP Tool name
+Skills are **internal** — they orchestrate MCP Tool calls when needed but do not contain direct API logic.
 
-No full implementation yet — only contracts (structure ready for TDD/future filling).
+### Critical Skills (Initial Set)
 
-## Defined Skills
+#### 1. `fetch_trends`
 
-- fetch_trends: Retrieve trending topics from social platforms
-- generate_video: Create short-form video content matching persona
-- post_content: Publish text/media to social channels with disclosure
+**Purpose**: Retrieve and filter current trending topics relevant to the agent's niche.
 
-Add more skills later (e.g., reply_comment, execute_transaction, download_youtube).
+**Input Contract** (dict or Pydantic model):
+
+```json
+{
+  "niche": "string (e.g., 'fashion', 'crypto')",
+  "platforms": ["array[string] (e.g., ['twitter', 'tiktok'])"],
+  "time_window_hours": "integer (default: 24)"
+}
+```

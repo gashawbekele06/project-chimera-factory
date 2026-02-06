@@ -1,49 +1,47 @@
-# Tooling & MCP Strategy
+# research/tooling_strategy.md
 
-**Version:** 1.0  
-**Date:** February 05, 2026
+## Tooling Strategy
 
-## Sub-Task A: Developer Tools (MCP Servers for Human Developer)
+### Sub-Task A: Developer Tools (MCP Servers)
 
-These MCP servers assist **me** (the FDE Trainee) during development in VS Code. They provide safe, standardized access to tools/resources without breaking the MCP-exclusive rule.
+These are **MCP servers** used during development to assist **you** (the human/AI co-pilot) in building and maintaining the codebase. They are **not** part of the runtime Chimera agent environment.
 
-All servers route through the configured proxy: `https://mcppulse.10academy.org/proxy`  
-Tenx MCP Sense is connected for full traceability (telemetry enabled in `.vscode/settings.json`).
+#### Selected & Configured Developer MCP Servers
 
-Selected & configured developer MCP servers:
+1. **git-mcp**
+   - Purpose: Version control operations (commit, branch, diff, status).
+   - Configuration: Standard stdio transport; auto-discovered in local dev environment.
+   - Usage: Enables safe, traceable commits that tell the story of spec → test → implementation.
 
-- **git-mcp** (or GitHub MCP / Git server):  
-  Version control bridge — list branches, commit, push, create PRs, search repo history.  
-  Purpose: Enables AI co-pilot to suggest git operations safely without shell escapes.
+2. **filesystem-mcp**
+   - Purpose: File editing, creation, reading, and navigation.
+   - Configuration: Local filesystem access via stdio/SSE; restricted to project directory.
+   - Usage: Primary tool for creating/modifying specs, tests, and stubs.
 
-- **filesystem-mcp**:  
-  Secure file read/write, search, create/edit files in allowed directories (repo root).  
-  Purpose: Lets AI agent read specs/, write drafts, or edit .md files during planning.
+3. **browser-mcp** (or web-search-mcp)
+   - Purpose: Research external documentation, MCP specs, or API references.
+   - Configuration: Proxied through MCP Pulse[](https://mcppulse.10academy.org/proxy).
+   - Usage: For clarifying SRS details or MCP tool schemas without leaving the IDE.
 
-- **terminal-mcp** (or shell-like):  
-  Run safe shell commands (uv sync, pytest, git status, make test).  
-  Purpose: Execute build/test/lint commands from within IDE agent workflows.
+4. **python-repl-mcp** (optional but recommended)
+   - Purpose: Quick validation of Pydantic schemas or contract testing.
+   - Configuration: Local Python interpreter bridge.
 
-- **browser-mcp** (or Puppeteer / Playwright-based):  
-  Controlled web browsing, scraping, or fetching docs.  
-  Purpose: Research trends, API docs, or OpenClaw examples during architecture planning.
+#### Rationale
 
-These are configured via VS Code MCP extension + proxy URL. No direct shell/API calls allowed outside MCP.
+- These tools empower spec-driven, traceable development while keeping the runtime agent clean.
+- All are local or proxied — no direct internet in agent runtime.
+- Documented here for clarity and future reference.
 
-## Sub-Task B: Runtime Agent Skills (for Chimera Agents)
+### Sub-Task B: Agent Skills (Runtime)
 
-Skills are atomic, reusable capabilities that **Worker** agents call via MCP Tools during runtime execution.  
-They are **not** developer tools — they power the autonomous influencers.
+Runtime skills are **internal, typed function packages** that the Chimera agent swarm (Workers) will call.  
+They are **not** MCP servers themselves but will eventually be wrapped/exposed via MCP Tools when needed (e.g., for cross-agent collaboration).
 
-Skills are defined in `skills/` with:
+Skills live in the `skills/` directory. Each skill is a Python module with:
 
-- README.md containing description + strict Input/Output JSON schemas
-- No implementation logic yet — contracts only (structure ready for agents to fill later)
+- Clear Input/Output contracts (Pydantic models recommended).
+- Stub implementation raising `NotImplementedError` (TDD compliance).
+- No direct external calls — all external work routes through future MCP Tools.
 
-Critical first skills (chosen for core influencer workflow):
-
-1. fetch_trends — perceive real-time trends
-2. generate_video — create multimodal content
-3. post_content — publish approved content
-
-See `skills/` directory for detailed contracts.
+See `skills/README.md` for detailed contracts of the initial critical skills.
