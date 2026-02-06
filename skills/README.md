@@ -1,24 +1,28 @@
 # skills/README.md
 
-## Runtime Skills for Chimera Agents
+## Chimera Agent Runtime Skills
 
-These are reusable, typed capability packages that Worker agents call during task execution.  
-Each skill has a **strict Input/Output contract** to prevent hallucinations and ensure testability.
+Skills are reusable, strongly-typed functions that Worker agents invoke during task execution.  
+They are **internal** — no direct API calls. External interactions route through MCP Tools.
 
-Skills are **internal** — they orchestrate MCP Tool calls when needed but do not contain direct API logic.
+Each skill has:
 
-### Critical Skills (Initial Set)
+- Explicit Input/Output contracts.
+- Stub implementation (TDD-ready).
+
+### Critical Skills
 
 #### 1. `fetch_trends`
 
-**Purpose**: Retrieve and filter current trending topics relevant to the agent's niche.
+**Purpose**: Discover and rank trending topics relevant to the agent's niche.
 
-**Input Contract** (dict or Pydantic model):
+**Input Contract**:
 
 ```json
 {
-  "niche": "string (e.g., 'fashion', 'crypto')",
-  "platforms": ["array[string] (e.g., ['twitter', 'tiktok'])"],
-  "time_window_hours": "integer (default: 24)"
+  "niche": "string",
+  "platforms": ["array[string]"],
+  "time_window_hours": "integer (default: 24)",
+  "max_results": "integer (default: 10)"
 }
 ```
