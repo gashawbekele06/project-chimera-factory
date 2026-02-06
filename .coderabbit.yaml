@@ -1,59 +1,23 @@
-# .coderabbit.yaml – CodeRabbit AI Review Configuration
-# Instructs reviewer to focus on Spec Alignment and Security
+# .coderabbit.yaml
 
 reviews:
-  request_changes_workflow: false  # Don't force request changes – just comment
-  request_changes_reason: "Critical spec violation or security issue found"
+  - name: Spec Alignment & Governance Review
+    prompt: |
+      You are reviewing code for Project Chimera, a strictly spec-driven autonomous influencer system using FastRender Swarm and MCP.
+      First, thoroughly check the specs/ directory (_meta.md, functional.md, technical.md, openclaw_integration.md).
+      Verify that any new or modified code:
+      - Strictly adheres to API contracts, schemas, and constraints in specs/technical.md
+      - Implements only ratified functional requirements from specs/functional.md
+      - Respects core constraints in specs/_meta.md (MCP exclusive, no direct API calls, no premature implementation)
+      Quote exact spec sections for any deviation.
+      Reject any implementation code that appears before specs are complete or tests pass.
 
-rules:
-  - name: Spec Alignment Check
-    description: "Ensure all new code aligns with ratified specs in specs/ directory"
-    severity: high
-    pattern: "*.py"
-    instructions: |
-      - Check if any new code references or implements functionality from specs/
-      - Flag if code is written without referencing a specific spec file/section
-      - Require comments like "# Implements specs/functional.md user story #X"
-      - Reject if code bypasses MCP or introduces direct API calls
-      - Reject if new functions ignore confidence_score / Judge validation
-
-  - name: Security Vulnerabilities
-    description: "Scan for common security issues"
-    severity: critical
-    pattern: "*.py"
-    instructions: |
-      - Detect hard-coded secrets, API keys, tokens
-      - Flag unsafe shell execution (subprocess without sanitization)
-      - Warn on potential injection risks (string formatting in SQL, commands)
-      - Check for missing input validation on MCP tool inputs
-      - Flag wallet/private key exposure (Agentic Commerce)
-      - Reject any direct requests/httpx calls outside MCP proxy
-
-  - name: TDD & Test Coverage
-    description: "Encourage TDD style"
-    severity: medium
-    pattern: "tests/*.py"
-    instructions: |
-      - New tests should be failing initially (red phase)
-      - Check for assertions on schema contracts (Pydantic ValidationError)
-      - Flag if tests pass without implementation (green without red phase)
-
-  - name: General Best Practices
-    description: "Code style & maintainability"
-    severity: low
-    pattern: "*.py"
-    instructions: |
-      - Prefer async for Worker/MCP calls
-      - Use Pydantic for all data models
-      - Keep commits atomic and reference task numbers
-
-pull_request:
-  auto_review:
-    enabled: true
-    on:
-      - opened
-      - synchronize
-    ignore_draft: true
-
-chat:
-  auto_reply: true
+  - name: Security & Best Practices Review
+    prompt: |
+      Perform a comprehensive security scan with focus on:
+      - Hardcoded secrets, keys, or credentials (especially Coinbase AgentKit/wallet related)
+      - Unsafe external interactions (must route exclusively through MCP)
+      - Injection risks, path traversal, or unsafe deserialization
+      - Exposure of sensitive data (wallet addresses, private keys)
+      Also enforce Python best practices: proper type hints, error handling, and avoidance of anti-patterns.
+      Reference OWASP Top 10 or similar guidelines where applicable.

@@ -1,4 +1,6 @@
-name: CI – Test & Lint
+# .github/workflows/main.yml
+
+name: CI/CD Pipeline
 
 on:
   push:
@@ -8,35 +10,24 @@ on:
 
 jobs:
   test:
-    name: Run Tests (including failing TDD)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        run: pip install uv
 
-      - name: Install dependencies with uv
-        run: uv sync --frozen
+      - name: Install dependencies
+        run: uv sync
 
-      - name: Run tests (should show 3 failing TDD tests)
-        run: uv run pytest tests/ -v
+      - name: Build Docker image
+        run: docker build -t chimera-factory .
 
-      - name: Upload test results (optional – for visibility)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-results
-          path: |
-            .pytest_cache/
-            **/pytest*.xml
-          retention-days: 7
+      - name: Run failing tests in Docker
+        run: docker run --rm chimera-factory
