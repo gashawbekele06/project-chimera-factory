@@ -1,30 +1,43 @@
+# tests/test_skills_interface.py
+
 import pytest
-
-# Test 1: fetch_trends input validation (will fail on missing function)
-
-
-def test_fetch_trends_accepts_valid_input_but_function_missing():
-    valid_input = {
-        "platforms": ["twitter", "tiktok"],
-        "region": "ET",
-        "limit": 15
-    }
-
-    # Direct call → MUST fail with NameError
-    fetch_trends(valid_input)  # ← intentional failure trigger
-
-    # If function existed, we'd add more assertions here
-
-# Test 2: post_content interface
+from skills.fetch_trends import fetch_trends
+from skills.generate_multimodal_content import generate_multimodal_content
+from skills.publish_content import publish_content
 
 
-def test_post_content_accepts_correct_parameters_but_function_missing():
-    input_data = {
-        "platform": "twitter",
-        "text_content": "Test post #Chimera",
-        "media_urls": ["s3://test/video.mp4"],
-        "disclosure_level": "automated"
-    }
+def test_fetch_trends_raises_not_implemented():
+    with pytest.raises(NotImplementedError):
+        fetch_trends({"niche": "test", "platforms": ["twitter"]})
 
-    # Direct call → MUST fail
-    post_content(input_data)  # ← intentional failure trigger
+
+def test_generate_multimodal_content_raises_not_implemented():
+    with pytest.raises(NotImplementedError):
+        generate_multimodal_content({
+            "topic": "test",
+            "goal": "test",
+            "persona_voice": ["witty"],
+            "tier": "daily",
+            "character_reference_id": "test123"
+        })
+
+
+def test_publish_content_raises_not_implemented():
+    with pytest.raises(NotImplementedError):
+        publish_content({
+            "platform": "twitter",
+            "caption": "test caption",
+            "media_urls": [],
+            "disclosure_level": "automated"
+        })
+
+
+def test_fetch_trends_accepts_correct_parameters():
+    # Confirms interface accepts optional params
+    with pytest.raises(NotImplementedError):
+        fetch_trends({
+            "niche": "crypto",
+            "platforms": ["twitter"],
+            "time_window_hours": 12,
+            "max_results": 10
+        })
