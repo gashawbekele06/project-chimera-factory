@@ -71,3 +71,7 @@ pytest tests/ -v
 # Or in Docker
 
 make test
+
+# Test change for CodeRabbit review
+
+This is a dummy change to trigger AI review.
